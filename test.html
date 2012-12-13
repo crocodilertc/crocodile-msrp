@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<script src="deps/md5-min.js"></script>
+		<script src="dist/crocodile-msrp.js"></script>
+		<script src="test.js"></script>
+		<style>
+.dropbox {
+	width: 425px;
+	height: 300px;
+	border: 2px solid #DDD;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	background-color: #FEFFEC;
+	text-align: center;
+	color: #BBB;
+	font-size: 2em;
+	font-family: Arial, sans-serif;
+}
+ 
+.droplabel {
+	position: relative;
+	top: 40%;
+}
+		</style>
+	</head>
+	<body onload="onload()">
+		<table>
+			<tr>
+				<td>
+					<div id="alice-dropbox" class="dropbox">
+						<span id="alice-droplabel" class="droplabel">Alice's file drop</span>
+					</div>
+				</td>
+				<td>
+					<div id="bob-dropbox" class="dropbox">
+						<span id="bob-droplabel" class="droplabel">Bob's file drop</span>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td id="alice-details"></td><td id="bob-details"></td>
+			</tr>
+			<tr>
+				<td id="alice-progress"></td><td id="bob-progress"></td>
+			</tr>
+			<tr>
+				<td id="alice-result"></td><td id="bob-result"></td>
+			</tr>
+		</table>
+	</body>
+</html>

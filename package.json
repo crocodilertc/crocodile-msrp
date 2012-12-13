@@ -1,0 +1,10 @@
+{
+	"name": "crocodile-msrp",
+	"version": "0.9.0",
+	"description": "Javascript MSRP over WebSocket stack",
+	"keywords": ["msrp", "websocket"],
+	"homepage": "http://code.google.com/p/crocodile-msrp/",
+	"author": {"name": "Crocodile RCS Ltd", "email": "info@crocodile-rcs.com"},
+	"licenses": [{"type": "MIT"}],
+	"private": "true"
+}
