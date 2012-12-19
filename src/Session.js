@@ -204,7 +204,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * value will be null.
 	 */
 	CrocMSRP.Session.prototype.processSdpAnswer = function(answer) {
-		var index, media, sender;
+		var index, media, sender, msgId;
 		
 		switch (this.state) {
 		case states.AWAIT_SDP:
@@ -234,22 +234,28 @@ var CrocMSRP = (function(CrocMSRP) {
 				}
 				changeState(this, states.ESTABLISHED);
 
-				// Complete the session establishment by sending a message
-				if (this.file && CrocMSRP.util.isEmpty(this.chunkSenders)) {
-					// New file transfer session; start sending the file
-					var params = this.fileParams;
-					sender = new CrocMSRP.ChunkSender(this, this.file,
-						params.selector.type, params.disposition,
-						params.description);
-				} else {
-					// Empty SEND (see RFC 4975 section 5.4 paragraph 3)
-					sender = new CrocMSRP.ChunkSender(this, null);
-				}
+				if (CrocMSRP.util.isEmpty(this.chunkSenders)) {
+					// Complete the session establishment by sending a message
+					if (this.file) {
+						// This is a file transfer session; start sending the file
+						var params = this.fileParams;
+						sender = new CrocMSRP.ChunkSender(this, this.file,
+							params.selector.type, params.disposition,
+							params.description);
+					} else {
+						// Empty SEND (see RFC 4975 section 5.4 paragraph 3)
+						sender = new CrocMSRP.ChunkSender(this, null);
+					}
 				
-				this.con.addSender(sender);
-				this.chunkSenders[sender.messageId] = sender;
+					this.con.addSender(sender);
+					this.chunkSenders[sender.messageId] = sender;
+					return sender.messageId;
+				}
 
-				return sender.messageId;
+				// Return message ID of the first existing ongoing message sender
+				for (msgId in this.chunkSenders) {
+					return msgId;
+				}
 			}
 		}
 		
@@ -746,6 +752,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			break;
 		case states.AUTH_FAILED:
 			session.established = false;
+			initAuth(session);
 			try {
 				session.eventObj.onAuthFailed();
 			} catch (e) {
@@ -755,6 +762,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			break;
 		case states.ERROR:
 			session.established = false;
+			initAuth(session);
 			try {
 				session.eventObj.onError();
 			} catch (e) {
@@ -764,6 +772,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			break;
 		case states.CLOSED:
 			session.established = false;
+			initAuth(session);
 			session.con.removeSession(session.sessionId);
 			break;
 		default:
@@ -776,6 +785,11 @@ var CrocMSRP = (function(CrocMSRP) {
 	function initAuth(session) {
 		// (re)Initialise any properties used by the authentication process
 
+		// Clear the auth timer if it's running
+		if (session.authTimer) {
+			clearTimeout(session.authTimer);
+			session.authTimer = null;
+		}
 		// As we receive relay URIs they will be appended here, and the toPath reconstructed
 		session.relayPath = [];
 		// Once SDP negotiation has provided the far end path, it will be stored
@@ -836,8 +850,9 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 		
 		session.relayPath = resp.usePath;
-		this.authTimer = setTimeout(
+		session.authTimer = setTimeout(
 			function() {
+				session.authTimer = null;
 				initAuth(session);
 				sendAuth(session);
 			}, (resp.expires - 30) * 1000);
