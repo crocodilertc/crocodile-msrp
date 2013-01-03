@@ -236,6 +236,7 @@ var CrocMSRP = (function(CrocMSRP) {
 
 				if (CrocMSRP.util.isEmpty(this.chunkSenders)) {
 					// Complete the session establishment by sending a message
+					var session = this;
 					if (this.file) {
 						// This is a file transfer session; start sending the file
 						var params = this.fileParams;
@@ -247,6 +248,7 @@ var CrocMSRP = (function(CrocMSRP) {
 						sender = new CrocMSRP.ChunkSender(this, null);
 					}
 				
+					sender.onReportTimeout = makeTimeoutHandler(session, sender.messageId);
 					this.con.addSender(sender);
 					this.chunkSenders[sender.messageId] = sender;
 					return sender.messageId;
@@ -359,7 +361,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * to correlate notifications with the appropriate message.
 	 */
 	CrocMSRP.Session.prototype.send = function(body, contentType) {
-		var type, sender;
+		var type, sender, session = this;
 		if (!this.established) {
 			throw 'Unable to send, session not yet established';
 		}
@@ -372,6 +374,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 		
 		sender = new CrocMSRP.ChunkSender(this, body, type);
+		sender.onReportTimeout = makeTimeoutHandler(session, sender.messageId);
 		this.con.addSender(sender);
 		this.chunkSenders[sender.messageId] = sender;
 
@@ -701,22 +704,24 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 	};
 	
-	CrocMSRP.Session.prototype.onReportTimeout = function(msgId) {
-		var sender = this.chunkSenders[msgId];
-		delete this.chunkSenders[msgId];
-		// Notify the application
-		try {
-			if (this.file || sender.disposition) {
-				this.eventObj.onFileSendFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
-			} else {
-				this.eventObj.onMessageFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
-			}
-		} catch (e) {
-			console.log('Unexpected application exception: ' + e);
-		}
-	};
-
 	// Private functions
+	function makeTimeoutHandler(session, msgId) {
+		return function() {
+			var sender = session.chunkSenders[msgId];
+			delete session.chunkSenders[msgId];
+			// Notify the application
+			try {
+				if (session.file || sender.disposition) {
+					session.eventObj.onFileSendFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
+				} else {
+					session.eventObj.onMessageFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
+				}
+			} catch (e) {
+				console.log('Unexpected application exception: ' + e);
+			}
+		};
+	}
+
 	function changeState(session, state) {
 		console.log('Change session state: sessionId=' + session.sessionId + ', old=' + session.state + ', new=' + state);
 		session.state = state;

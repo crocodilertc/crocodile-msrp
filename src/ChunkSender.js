@@ -47,7 +47,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 		
 		this.session = session;
-		this.chunkSize = session.config.chunkSize;
+		this.config = session.config;
 		this.messageId = CrocMSRP.util.newMID();
 		
 		if (this.contentType === '') {
@@ -64,7 +64,10 @@ var CrocMSRP = (function(CrocMSRP) {
 		// Map containing REPORT acks that arrive out-of-order (indexed by range start)
 		this.incontiguousReports = {};
 		this.incontiguousReportCount = 0;
+		// Report timer reference
 		this.reportTimer = null;
+		// Optional report timeout callback
+		this.onReportTimeout = null;
 		this.aborted = false;
 		this.remoteAbort = false;
 	};
@@ -82,7 +85,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			chunk.continuationFlag = CrocMSRP.Message.Flag.abort;
 		} else {
 			var start = this.sentBytes + 1,
-				end = Math.min(this.sentBytes + this.chunkSize, this.size);
+				end = Math.min(this.sentBytes + this.config.chunkSize, this.size);
 			chunk.byteRange = {'start': start, 'end': end, 'total': this.size};
 			
 			if (this.size > 0) {
@@ -104,11 +107,11 @@ var CrocMSRP = (function(CrocMSRP) {
 			
 			if (end < this.size) {
 				chunk.continuationFlag = CrocMSRP.Message.Flag.continued;
-			} else {
-				var session = this.session, msgId = this.messageId;
+			} else if (this.onReportTimeout) {
+				var sender = this;
 				this.reportTimer = setTimeout(
-					function() {session.onReportTimeout(msgId);},
-					session.config.reportTimeout
+					function() {sender.onReportTimeout();},
+					this.config.reportTimeout
 				);
 			}
 			this.sentBytes = end;
@@ -135,34 +138,35 @@ var CrocMSRP = (function(CrocMSRP) {
 		if (report.status !== CrocMSRP.Status.OK) {
 			this.abort();
 			this.remoteAbort = true;
-		}
-		
-		if (report.byteRange.start <= this.ackedBytes + 1) {
-			if (report.byteRange.end > this.ackedBytes) {
-				this.ackedBytes = report.byteRange.end;
-			}
-		} else if (this.incontiguousReportCount > 16) {
-			// Start resending from the last acked position
-			this.resume();
-			return;
 		} else {
-			// Add this report to the map of incontiguous reports
-			this.incontiguousReports[report.byteRange.start] = report.byteRange.end;
-			this.incontiguousReportCount++;
-			return;
-		}
-		
-		// Check whether any previous reports are now contiguous
-		while (appended) {
-			appended = false;
-			for (start in this.incontiguousReports) {
-				if (start <= this.ackedBytes + 1) {
-					if (this.incontiguousReports[start] > this.ackedBytes) {
-						this.ackedBytes = this.incontiguousReports[start];
+			// Success report; check the byte range
+			if (report.byteRange.start <= this.ackedBytes + 1) {
+				if (report.byteRange.end > this.ackedBytes) {
+					this.ackedBytes = report.byteRange.end;
+				}
+			} else if (this.incontiguousReportCount > 16) {
+				// Start resending from the last acked position
+				this.resume();
+				return;
+			} else {
+				// Add this report to the map of incontiguous reports
+				this.incontiguousReports[report.byteRange.start] = report.byteRange.end;
+				this.incontiguousReportCount++;
+				return;
+			}
+			
+			// Check whether any previous reports are now contiguous
+			while (appended) {
+				appended = false;
+				for (start in this.incontiguousReports) {
+					if (start <= this.ackedBytes + 1) {
+						if (this.incontiguousReports[start] > this.ackedBytes) {
+							this.ackedBytes = this.incontiguousReports[start];
+						}
+						delete this.incontiguousReports[start];
+						this.incontiguousReportCount--;
+						appended = true;
 					}
-					delete this.incontiguousReports[start];
-					this.incontiguousReportCount--;
-					appended = true;
 				}
 			}
 		}
