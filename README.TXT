@@ -24,8 +24,9 @@ Building
 ======== 
 
 * Download and install Node (http://nodejs.org/)
-* Install Grunt using the Node Package Manager (npm install -g grunt)
-* Run grunt (grunt.cmd on Windows) in the top-level directory (the one
+* Install Grunt in the project directory using the Node Package Manager:
+    npm install grunt@~0.3
+* Run grunt (grunt.cmd on Windows) in the project directory (the one
 containing grunt.js) 
 
 Build targets
