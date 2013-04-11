@@ -1,10 +1,40 @@
 {
-	"name": "crocodile-msrp",
-	"version": "0.9.0",
-	"description": "Javascript MSRP over WebSocket stack",
-	"keywords": ["msrp", "websocket"],
-	"homepage": "http://code.google.com/p/crocodile-msrp/",
-	"author": {"name": "Crocodile RCS Ltd", "email": "info@crocodile-rcs.com"},
-	"licenses": [{"type": "MIT"}],
-	"private": "true"
+  "name": "crocodile-msrp",
+  "title": "Crocodile MSRP",
+  "version": "0.9.0",
+  "description": "Javascript MSRP over WebSocket stack",
+  "keywords": [
+    "msrp",
+    "websocket"
+  ],
+  "homepage": "http://code.google.com/p/crocodile-msrp/",
+  "author": {
+    "name": "Crocodile RCS Ltd",
+    "url": "http://crocodile-rcs.com",
+    "email": "info@crocodile-rcs.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://code.google.com/p/crocodile-msrp/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://crocodile-msrp.googlecode.com/git/LICENSE.TXT"
+    }
+  ],
+  "private": "true",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-jshint": "~0.4.1",
+    "grunt-contrib-qunit": "~0.2.1",
+    "grunt-contrib-concat": "~0.1.2",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-watch": "~0.3.1",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-jsdoc": "~0.3.1"
+  }
 }

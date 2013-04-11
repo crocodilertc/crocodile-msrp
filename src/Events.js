@@ -5,6 +5,8 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
+/*jshint unused:vars */
+
 var CrocMSRP = (function(CrocMSRP) {
 
 	/**

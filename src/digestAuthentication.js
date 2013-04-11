@@ -5,8 +5,6 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global hex_md5: false, console: false*/
-
 var CrocMSRP;
 
 var CrocMSRP = (function(CrocMSRP) {

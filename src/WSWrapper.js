@@ -5,7 +5,7 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global console: false*/
+/* jshint unused:vars */
 
 var CrocMSRP = (function(CrocMSRP) {
 	var states;

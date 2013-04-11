@@ -5,12 +5,14 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
+/*jshint unused:vars */
+
 var CrocMSRP = (function(CrocMSRP) {
 
 	/**
 	 * Creates a new ConnectionConfig object, with sensible defaults.
 	 * @class A ConnectionConfig object contains optional configuration settings
-	 * that can be passed to the constructor {@link CrocMSRP.Connection).
+	 * that can be passed to the constructor {@link CrocMSRP.Connection}.
 	 */
 	CrocMSRP.ConnectionConfig = function() {
 		/**

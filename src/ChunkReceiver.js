@@ -5,8 +5,6 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global console: false*/
-
 var CrocMSRP = (function(CrocMSRP) {
 
 	/**

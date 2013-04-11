@@ -135,7 +135,7 @@ QUnit.module("ChunkSender");
 		var type = 'text/plain';
 		var sender = new CrocMSRP.ChunkSender(fakeSession, body, type);
 		var fakeReport = {messageId: sender.messageId, status: CrocMSRP.Status.STOP_SENDING};
-		var chunk = sender.getNextChunk();
+		sender.getNextChunk();
 		sender.processReport(fakeReport);
 		
 		assert.ok(sender.isSendComplete(), 'Sending complete');
@@ -148,7 +148,7 @@ QUnit.module("ChunkSender");
 		var body = 'string chunk';
 		var type = 'text/plain';
 		var sender = new CrocMSRP.ChunkSender(fakeSession, body, type);
-		var chunk = sender.getNextChunk();
+		sender.getNextChunk();
 		
 		assert.ok(sender.isSendComplete(), 'Sending complete');
 		assert.ok(!sender.isComplete(), 'Final report not received');
@@ -185,7 +185,7 @@ QUnit.module("ChunkSender");
 		sender.onReportTimeout = function() {
 			assert.ok(true, 'Report timeout ran');
 		};
-		var chunk = sender.getNextChunk();
+		sender.getNextChunk();
 		
 		assert.ok(sender.isSendComplete(), 'Sending complete');
 		assert.ok(!sender.isComplete(), 'Final report not received');

@@ -5,8 +5,6 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global console: false*/
-
 var CrocMSRP = (function(CrocMSRP) {
 	var lineEnd = '\r\n';
 	
@@ -134,7 +132,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	//          0 if there are no more headers
 	//          -1 if it encounters an error
 	function getNextHeader(msg, startIndex, msgObj) {
-		var endIndex, colonIndex, name, value, index, addedHeader = false,
+		var endIndex, colonIndex, name, value,
 			endLineNoFlag = msgObj.getEndLineNoFlag();
 		
 		// If there is a body, there will be an extra CRLF between the headers and
@@ -337,8 +335,6 @@ var CrocMSRP = (function(CrocMSRP) {
 	}
 	
 	function parseUsePath(headerArray, msgObj) {
-		var splitValue;
-		
 		// We only expect one Use-Path header
 		if (headerArray.length !== 1) {
 			console.log('Multiple Use-Path headers');
@@ -355,8 +351,6 @@ var CrocMSRP = (function(CrocMSRP) {
 	}
 	
 	function parseExpires(headerArray, msgObj) {
-		var splitValue;
-		
 		// We only expect one Expires header
 		if (headerArray.length !== 1) {
 			console.log('Multiple Expires headers');
@@ -411,8 +405,6 @@ var CrocMSRP = (function(CrocMSRP) {
 	}
 	
 	function parseMsgId(headerArray, msgObj) {
-		var splitValue;
-		
 		// We only expect one Message-ID header
 		if (headerArray.length !== 1) {
 			console.log('Multiple Message-ID headers');

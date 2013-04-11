@@ -5,9 +5,6 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global console: false*/
-
-/** @namespace Encapsulates all CrocMSRP functionality */
 var CrocMSRP = (function(CrocMSRP) {
 	var reconnectTimeout = 10000;
 	
@@ -19,7 +16,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @class Represents a single connection to a websocket MSRP relay.
 	 */
 	CrocMSRP.Connection = function(relayWsUri, relayMsrpUri, config) {
-		var uri, option, defaultConfig = new CrocMSRP.ConnectionConfig();
+		var option, defaultConfig = new CrocMSRP.ConnectionConfig();
 
 		// Process any optional configuration options
 		if (config) {

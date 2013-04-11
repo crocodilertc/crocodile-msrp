@@ -5,8 +5,6 @@
  * Released under the MIT license - see LICENSE.TXT
  */
 
-/*global console: false, File: false*/
-
 var CrocMSRP = (function(CrocMSRP) {
 	var states;
 
@@ -29,7 +27,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * A single connection can host many simultaneous sessions.
 	 */
 	CrocMSRP.Session = function(con, sessionId, localUri, eventObj) {
-		var index, toUri;
+		var index;
 		
 		// Check for mandatory methods on the event object
 		if (!eventObj) {
@@ -129,7 +127,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			// This is an outgoing file transfer session; add extra SDP
 			// attributes as per RFC 5547.
 			var params = this.fileParams,
-				selector = '', date = '',
+				selector = '',
 				hash;
 			
 			params.selector = params.selector || {};
@@ -575,7 +573,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	};
 	
 	CrocMSRP.Session.prototype.onIncomingReport = function(report) {
-		var msgId, sender, reportTimer, status;
+		var msgId, sender;
 
 		msgId = report.messageId;
 		if (!msgId) {
@@ -629,7 +627,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	};
 	
 	CrocMSRP.Session.prototype.onIncomingResponse = function(resp) {
-		var msgId, sent = 0;
+		var msgId;
 
 		if (resp.request.method === 'AUTH') {
 			switch (resp.status) {
@@ -811,7 +809,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		authReq.toPath = [session.config.relayMsrpUri];
 
 		if (resp) {
-			var index, authorisation = null, parsedAuthorisation;
+			var index, authorisation = null;
 				
 			if (!resp.authenticate) {
 				console.log('Auth failed: no WWW-Authenticate header available');

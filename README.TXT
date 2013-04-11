@@ -16,28 +16,35 @@ md5.js v2.2
 Copyright (C) Paul Johnston 1999 - 2009
 Distributed under the BSD License.
 
-QUnit v1.10.0
+QUnit v1.11.0
 Copyright 2012 jQuery Foundation and other contributors
 Released under the MIT license.
 
 Building
 ======== 
 
-* Download and install Node (http://nodejs.org/)
-* Install Grunt in the project directory using the Node Package Manager:
-    npm install grunt@~0.3
-* Run grunt (grunt.cmd on Windows) in the project directory (the one
-containing grunt.js) 
+* Download and install Node >= 0.8.0 (http://nodejs.org/)
+* If you haven't used the Grunt build tool before, install the command-line
+tool using the Node Package Manager:
+    npm install -g grunt-cli
+* Install Grunt and other dependencies by changing to the project directory and
+running the following:
+    npm install
+* Run "grunt" in the project directory (the one containing Gruntfile.js) .
 
 Build targets
 ============= 
 
-* lint: Runs JSLint (http://www.jslint.com) to pick up possible coding 
-issues
-* concat: Concatenates all of the source files into a single JS file (CrocMSRP.js)
-* min: Runs UglifyJS to minimise the source into a single JS file (CrocMSRP.min.js)
-* test: Attempts to run any unit tests. Requires PhantomJS, and I couldn't get
-this working. 
+* jshint: Runs JSHint (http://www.jshint.com) to pick up possible coding 
+issues.
+* clean: Removes any build output from the dist directory.
+* concat: Concatenates all of the source files into a single JS file
+(crocodile-msrp.js).
+* uglify: Runs UglifyJS to "minify" the concatenated source, reducing the file
+size (crocodile-msrp.min.js).
+* qunit: Attempts to run any unit tests under PhantomJS. This is not currently
+working with PhantomJS 0.9, and thus has been removed from the default build
+target. To run the unit tests successfully, open test/test.html in a browser.
 
 Building documentation
 ====================== 
