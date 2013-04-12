@@ -13,6 +13,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * Creates an events callback object used with a {@link CrocMSRP.Session}.
 	 * The methods defined here should be overrided as appropriate to your
 	 * application.
+	 * 
 	 * @class The Session event callback object.
 	 */
 	CrocMSRP.Events = function() {
@@ -43,50 +44,65 @@ var CrocMSRP = (function(CrocMSRP) {
 	/**
 	 * Event callback indicating that a message has been received for the
 	 * session.
+	 * 
+	 * @param {String} id The Message ID of the received message.
 	 * @param {String} contentType The MIME type of the received message.
-	 * @param {String|Blob} body The body of the received message.
+	 * @param {String|Blob} body The body of the received message. Blob data may
+	 * be read using a FileReader object (http://www.w3.org/TR/FileAPI/), or
+	 * used within the page DOM by turning it into a URL:
+	 * <code>var url = URL.createObjectURL(blob);</code>.
 	 * @throws {CrocMSRP.Exceptions.UnsupportedMedia} If the received MIME type
 	 * is not recognised/supported by the application. An appropriate error will
 	 * be returned to the relay in this case.
 	 */
-	CrocMSRP.Events.prototype.onMessageReceived = function(contentType, body) {
+	CrocMSRP.Events.prototype.onMessageReceived = function(id, contentType, body) {
 	};
 	
 	/**
 	 * Event callback indicating that a sent message has been acknowledged by
 	 * the MSRP relay.
-	 * @param {String} msgId The Message ID of the sent message (as returned
+	 * 
+	 * @param {String} id The Message ID of the sent message (as returned
 	 * by the {@link CrocMSRP.Session#send} function).
 	 */
-	CrocMSRP.Events.prototype.onMessageSent = function(msgId) {
+	CrocMSRP.Events.prototype.onMessageSent = function(id) {
 	};
 	
 	/**
 	 * Event callback indicating that a sent message has been delivered
 	 * successfully (i.e. a REPORT message has been received from the far end).
-	 * @param {String} msgId The Message ID of the delivered message (as
+	 * 
+	 * @param {String} id The Message ID of the delivered message (as
 	 * returned by the {@link CrocMSRP.Session#send} function).
 	 */
-	CrocMSRP.Events.prototype.onMessageDelivered = function(msgId) {
+	CrocMSRP.Events.prototype.onMessageDelivered = function(id) {
 	};
 
 	/**
-	 * Event callback indicating that an error response was received from the
-	 * MSRP websocket relay when sending a message.
-	 * @param {String} msgId The Message ID of the failed message (as returned
+	 * Event callback indicating that an outgoing message failed. Possible
+	 * reasons include an error response from the relay, an abort from the
+	 * receiving party, or a timeout waiting for a REPORT from the receiving
+	 * party.
+	 * 
+	 * @param {String} id The Message ID of the failed message (as returned
 	 * by the {@link CrocMSRP.Session#send} function).
-	 * @param {String} status The error status returned by the relay.
-	 * @param {String} comment The error comment returned by the relay.
+	 * @param {String} status The error status returned. If we timed out locally,
+	 * this will be set to 408.
+	 * @param {String} comment The error comment returned (if present). If we
+	 * timed out locally, this will be set to "Report Timeout".
 	 */
-	CrocMSRP.Events.prototype.onMessageFailed = function(msgId, status, comment) {
+	CrocMSRP.Events.prototype.onMessageSendFailed = function(id, status, comment) {
 	};
 	
 	/**
-	 * Event callback indicating that an incoming file transfer has started for
-	 * the session.
+	 * Event callback indicating that the first chunk of a message has been
+	 * received.  If this message only consists of a single chunk, the
+	 * {@link #onChunkReceived} and {@link #onMessageReceived} events will be
+	 * fired immediately after this one.
 	 * To abort an unfinished transfer, call {@link CrocMSRP.Session#abortFileReceive}.
-	 * @param {String} id A unique identifier for the incoming file transfer.
-	 * @param {String} contentType The MIME type of the incoming file.
+	 * 
+	 * @param {String} id The Message ID of the received chunk.
+	 * @param {String} contentType The MIME type of the incoming message.
 	 * @param {String} filename The file name, if provided by the far end;
 	 * otherwise null.
 	 * @param {Number} size The file size in bytes, if provided by the far end;
@@ -97,78 +113,48 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * is not recognised/supported by the application. An appropriate error will
 	 * be returned to the relay in this case.
 	 */
-	CrocMSRP.Events.prototype.onFileReceiveStarted = function(id, contentType, filename, size, description) {
+	CrocMSRP.Events.prototype.onFirstChunkReceived = function(id, contentType, filename, size, description) {
 	};
 	
 	/**
-	 * Event callback indicating that an incoming file transfer chunk has been
+	 * Event callback indicating that an incoming message chunk has been
 	 * received. This is intended to allow the transfer progress to be monitored.
-	 * @param {String} id A unique identifier for the incoming file transfer.
+	 * 
+	 * @param {String} id The Message ID of the received chunk.
 	 * @param {Number} receivedBytes The total bytes received so far. Note that
 	 * this may become greater than the reported file size if any chunks have
 	 * been resent during the transfer.
 	 */
-	CrocMSRP.Events.prototype.onFileReceiveChunk = function(id, receivedBytes) {
+	CrocMSRP.Events.prototype.onChunkReceived = function(id, receivedBytes) {
 	};
 	
 	/**
-	 * Event callback indicating that an incoming file transfer has completed,
-	 * and providing the transfered file to the application.
-	 * @param {String} id A unique identifier for the incoming file transfer.
-	 * @param {String} contentType The MIME type of the file.
-	 * @param {Blob} file The received file. The file data may be read from the
-	 * Blob using a FileReader object (http://www.w3.org/TR/FileAPI/).
-	 * @throws {CrocMSRP.Exceptions.UnsupportedMedia} If the received MIME type
-	 * is not recognised/supported by the application. An appropriate error will
-	 * be returned to the relay in this case.
+	 * Event callback indicating that an incoming message has been aborted.
+	 * The abort may have been requested by the local or remote party.
+	 * 
+	 * @param {String} id The Message ID of the aborted message.
+	 * @param {Blob} partialBody The partially-received message body.
 	 */
-	CrocMSRP.Events.prototype.onFileReceiveCompleted = function(id, contentType, file) {
+	CrocMSRP.Events.prototype.onMessageReceiveAborted = function(id, partialBody) {
 	};
 	
 	/**
-	 * Event callback indicating that an incoming file transfer has been aborted
-	 * by the remote party.
-	 * @param {String} id A unique identifier for the incoming file transfer.
+	 * Event callback indicating that an incoming message has timed out.
+	 * 
+	 * @param {String} id The Message ID of the timed-out message.
 	 */
-	CrocMSRP.Events.prototype.onFileReceiveAborted = function(id) {
+	CrocMSRP.Events.prototype.onMessageReceiveTimeout = function(id) {
 	};
 	
 	/**
-	 * Event callback indicating that an incoming file transfer has timed out.
-	 * @param {String} id A unique identifier for the incoming file transfer.
-	 */
-	CrocMSRP.Events.prototype.onFileReceiveTimeout = function(id) {
-	};
-	
-	/**
-	 * Event callback indicating that an outgoing file transfer chunk has been
+	 * Event callback indicating that an outgoing message chunk has been
 	 * sent. This is intended to allow the transfer progress to be monitored.
-	 * @param {String} id A unique identifier for the outgoing file transfer.
+	 * 
+	 * @param {String} id The Message ID of the sent chunk (as returned
+	 * by the {@link CrocMSRP.Session#send} function).
 	 * @param {Number} sentBytes The total bytes sent so far.
 	 */
-	CrocMSRP.Events.prototype.onFileSendChunk = function(id, sentBytes) {
-	};
-	
-	/**
-	 * Event callback indicating that an outgoing file transfer has completed,
-	 * and providing the transfered file to the application.
-	 * @param {String} id A unique identifier for the outgoing file transfer.
-	 */
-	CrocMSRP.Events.prototype.onFileSendCompleted = function(id) {
-	};
-	
-	/**
-	 * Event callback indicating that an outgoing file transfer failed. Possible
-	 * reasons include an error response from the relay, an abort from the
-	 * receiving party, or a timeout waiting for a REPORT from the receiving
-	 * party.
-	 * @param {String} id A unique identifier for the incoming file transfer.
-	 * @param {String} status The error status returned. If we timed out locally,
-	 * this will be set to 408.
-	 * @param {String} comment The error comment returned (if present). If we
-	 * timed out locally, this will be set to "Report Timeout".
-	 */
-	CrocMSRP.Events.prototype.onFileSendFailed = function(id, status, comment) {
+	CrocMSRP.Events.prototype.onChunkSent = function(id, sentBytes) {
 	};
 	
 	CrocMSRP.mandatoryEvents = [
@@ -176,12 +162,11 @@ var CrocMSRP = (function(CrocMSRP) {
 		'onAuthFailed',
 		'onError',
 		'onMessageReceived',
-		'onMessageFailed',
-		'onFileReceiveStarted',
-		'onFileReceiveCompleted',
-		'onFileReceiveAborted',
-		'onFileSendCompleted',
-		'onFileSendFailed'
+		'onMessageSendFailed',
+		'onFirstChunkReceived',
+		'onMessageReceiveAborted',
+		'onMessageReceiveTimeout',
+		'onMessageDelivered'
 	];
 
 	return CrocMSRP;

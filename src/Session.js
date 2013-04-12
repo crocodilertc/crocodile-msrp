@@ -442,7 +442,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	};
 	
 	CrocMSRP.Session.prototype.onIncomingSend = function(req) {
-		var msgId, description, filename, chunkReceiver;
+		var msgId, description = null, filename = null, size = -1, chunkReceiver;
 		
 		try {
 			if (req.byteRange.start === 1 &&
@@ -450,28 +450,38 @@ var CrocMSRP = (function(CrocMSRP) {
 				// Non chunked message, but check whether it is an empty 'ping'
 				if (req.body) {
 					// Complete non-chunked, non-empty message
+
+					// These are not required to have a Message-ID; create
+					// one if it is not provided.
+					msgId = req.messageId || CrocMSRP.util.newMID();
+					size = req.byteRange.total;
+
 					if (req.contentDisposition &&
 							(req.contentDisposition.type === 'attachment' ||
 							req.contentDisposition.type === 'render')) {
 						// Single chunk file transfer
+						// For consistency, files are always provided as blobs
 						chunkReceiver = new CrocMSRP.ChunkReceiver(req, this.config.recvBuffer);
-						// These are not required to have a Message-ID; create
-						// one if it is not provided.
-						msgId = req.messageId || CrocMSRP.util.newMID();
 						description = req.getHeader('content-description');
 						filename = req.contentDisposition.param.filename;
 				
-						this.eventObj.onFileReceiveStarted(msgId, req.contentType,
-							filename, req.byteRange.total, description);
-						if (this.eventObj.onFileReceiveChunk) {
-							this.eventObj.onFileReceiveChunk(msgId,
+						this.eventObj.onFirstChunkReceived(msgId, req.contentType,
+							filename, size, description);
+						if (this.eventObj.onChunkReceived) {
+							this.eventObj.onChunkReceived(msgId,
 								chunkReceiver.receivedBytes);
 						}
-						this.eventObj.onFileReceiveCompleted(msgId,
-							chunkReceiver.blob.type, chunkReceiver.blob);
+						this.eventObj.onMessageReceived(msgId,
+								chunkReceiver.blob.type, chunkReceiver.blob);
 					} else {
 						// Single chunk message
-						this.eventObj.onMessageReceived(req.contentType, req.body);
+						this.eventObj.onFirstChunkReceived(msgId, req.contentType,
+								filename, size, description);
+						if (this.eventObj.onChunkReceived) {
+							this.eventObj.onChunkReceived(msgId, size);
+						}
+						this.eventObj.onMessageReceived(msgId, req.contentType,
+								req.body);
 					}
 				}
 			} else {
@@ -486,16 +496,13 @@ var CrocMSRP = (function(CrocMSRP) {
 						req.continuationFlag === CrocMSRP.Message.Flag.continued) {
 					// First chunk
 					chunkReceiver = new CrocMSRP.ChunkReceiver(req, this.config.recvBuffer);
+					description = req.getHeader('content-description') || null;
+					filename = req.contentDisposition.param.filename || null;
 
-					if (chunkReceiver.isFile) {
-						// Notify the application of a new file transfer
-						description = req.getHeader('content-description');
-						filename = req.contentDisposition.param.filename;
-					
-						this.eventObj.onFileReceiveStarted(msgId, req.contentType,
-							filename, req.byteRange.total, description);
-					}
-					
+					// The following may throw an UnsupportedMedia exception
+					this.eventObj.onFirstChunkReceived(msgId, req.contentType,
+						filename, req.byteRange.total, description);
+
 					// The application has not rejected it, so add it to the list of
 					// current receivers.
 					this.chunkReceivers[msgId] = chunkReceiver;
@@ -520,18 +527,24 @@ var CrocMSRP = (function(CrocMSRP) {
 					}
 					
 					if (!chunkReceiver.processChunk(req)) {
+						// Message receive has been aborted
 						delete this.chunkReceivers[msgId];
+
 						if (chunkReceiver.remoteAbort) {
-							// Notify the application of the abort
-							try {
-								this.eventObj.onFileReceiveAborted(msgId);
-							} catch (e) {
-								console.log('Unexpected application exception: ' + e);
-							}
+							// TODO: what's the appropriate response to an abort?
+							sendResponse(req, this.con, this.localUri, CrocMSRP.Status.STOP_SENDING);
 						} else {
 							// Notify the far end of the abort
 							sendResponse(req, this.con, this.localUri, CrocMSRP.Status.STOP_SENDING);
 						}
+
+						// Notify the application of the abort
+						try {
+							this.eventObj.onMessageReceiveAborted(msgId, chunkReceiver.blob);
+						} catch (e) {
+							console.log('Unexpected application exception: ' + e);
+						}
+
 						return;
 					}
 				}
@@ -539,15 +552,11 @@ var CrocMSRP = (function(CrocMSRP) {
 				if (chunkReceiver.isComplete()) {
 					delete this.chunkReceivers[msgId];
 					var blob = chunkReceiver.blob;
-					if (chunkReceiver.isFile) {
-						this.eventObj.onFileReceiveCompleted(msgId, blob.type, blob);
-					} else {
-						this.eventObj.onMessageReceived(blob.type, blob);
-					}
+					this.eventObj.onMessageReceived(msgId, blob.type, blob);
 				} else {
 					// Receive ongoing
-					if (chunkReceiver.isFile && this.eventObj.onFileReceiveChunk) {
-						this.eventObj.onFileReceiveChunk(msgId, chunkReceiver.receivedBytes);
+					if (this.eventObj.onChunkReceived) {
+						this.eventObj.onChunkReceived(msgId, chunkReceiver.receivedBytes);
 					}
 				}
 			}
@@ -607,19 +616,11 @@ var CrocMSRP = (function(CrocMSRP) {
 		// Notify the application
 		try {
 			if (report.status === CrocMSRP.Status.OK) {
-				if ((this.file || sender.disposition) &&
-						this.eventObj.onFileSendCompleted) {
-					this.eventObj.onFileSendCompleted(msgId);
-				} else if (!(this.file || sender.disposition) &&
-						this.eventObj.onMessageDelivered) {
+				if (this.eventObj.onMessageDelivered) {
 					this.eventObj.onMessageDelivered(msgId);
 				}
 			} else {
-				if (this.file || sender.disposition) {
-					this.eventObj.onFileSendFailed(msgId, report.status, report.comment);
-				} else {
-					this.eventObj.onMessageFailed(msgId, report.status, report.comment);
-				}
+				this.eventObj.onMessageSendFailed(msgId, report.status, report.comment);
 			}
 		} catch (e) {
 			console.log('Unexpected application exception: ' + e);
@@ -665,18 +666,14 @@ var CrocMSRP = (function(CrocMSRP) {
 		var sender = resp.request.sender;
 		if (resp.status === CrocMSRP.Status.OK) {
 			try {
-				if (this.file || sender.disposition) {
-					// File transfer: notify for each sent chunk
-					if (!sender.aborted && this.eventObj.onFileSendChunk) {
-						this.eventObj.onFileSendChunk(msgId, resp.request.byteRange.end);
-					}
-				} else {
-					// Inline message: only notify when we've finished sending
-					if (resp.request.continuationFlag === CrocMSRP.Message.Flag.end &&
-							this.eventObj.onMessageSent) {
-						// Notify the application
-						this.eventObj.onMessageSent(msgId);
-					}
+				if (!sender.aborted && this.eventObj.onChunkSent) {
+					this.eventObj.onChunkSent(msgId, resp.request.byteRange.end);
+				}
+
+				if (resp.request.continuationFlag === CrocMSRP.Message.Flag.end &&
+						this.eventObj.onMessageSent) {
+					// Notify the application
+					this.eventObj.onMessageSent(msgId);
 				}
 			} catch (e) {
 				console.log('Unexpected application exception: ' + e);
@@ -691,11 +688,7 @@ var CrocMSRP = (function(CrocMSRP) {
 
 			// Notify the application
 			try {
-				if (this.file || sender.disposition) {
-					this.eventObj.onFileSendFailed(msgId, resp.status, resp.comment);
-				} else {
-					this.eventObj.onMessageFailed(msgId, resp.status, resp.comment);
-				}
+				this.eventObj.onMessageSendFailed(msgId, resp.status, resp.comment);
 			} catch (e) {
 				console.log('Unexpected application exception: ' + e);
 			}
@@ -705,15 +698,10 @@ var CrocMSRP = (function(CrocMSRP) {
 	// Private functions
 	function makeTimeoutHandler(session, msgId) {
 		return function() {
-			var sender = session.chunkSenders[msgId];
 			delete session.chunkSenders[msgId];
 			// Notify the application
 			try {
-				if (session.file || sender.disposition) {
-					session.eventObj.onFileSendFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
-				} else {
-					session.eventObj.onMessageFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
-				}
+				session.eventObj.onMessageSendFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
 			} catch (e) {
 				console.log('Unexpected application exception: ' + e);
 			}
@@ -927,7 +915,7 @@ var CrocMSRP = (function(CrocMSRP) {
 				receiver.abort();
 				delete session.chunkReceivers[msgId];
 				try {
-					session.eventObj.onFileReceiveTimeout(msgId);
+					session.eventObj.onMessageReceiveTimeout(msgId);
 				} catch (e) {
 					console.log('Unexpected application exception: ' + e);
 				}

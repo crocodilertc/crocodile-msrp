@@ -1,4 +1,4 @@
-var offer, answer, reader, lastFilename, sender, sBytes, receiver, rBytes, rBytesDelta, progressInterval;
+var offer, answer, reader, lastFilename, sender, sBytes, receiver, rBytes, rBytesDelta, progressInterval, sFileMsgId, rFileMsgId;
 
 function makeEventObj(user) {
 	return {
@@ -12,89 +12,101 @@ function makeEventObj(user) {
 		onError: function() {
 			console.log(user + ' onError');
 		},
-		onMessageReceived: function(contentType, body) {
-			console.log(user + ' onMessageReceived (' + typeof body + ', ' + contentType + '):');
-			if (body instanceof String || typeof body === 'string') {
-				console.log(body);
+		onMessageReceived: function(id, contentType, body) {
+			if (id !== rFileMsgId) {
+				console.log(user + ' onMessageReceived (' + typeof body + ', ' + contentType + '):');
+				if (body instanceof String || typeof body === 'string') {
+					console.log(body);
+				} else {
+					reader = new FileReader();
+					reader.onload = function() {console.log(reader.result);};
+					reader.readAsText(body);
+				}
 			} else {
-				reader = new FileReader();
-				reader.onload = function() {console.log(reader.result);};
-				reader.readAsText(body);
+				var el = document.getElementById(user + '-result');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				var url = URL.createObjectURL(body);
+				var a = document.createElement('a');
+				a.href = url;
+				a.target = '_blank';
+				a.download = lastFilename;
+				a.appendChild(document.createTextNode('Download file'));
+				el.appendChild(a);
+				console.log(user + ' onMessageReceived: id=' + id + ', contentType=' + contentType + ', size=' + body.size);
+				clearInterval(progressInterval);
+				updateProgress();
 			}
 		},
-		onMessageSent: function(msgId) {
-			console.log(user + ' onMessageSent: msgId=' + msgId);
+		onMessageSent: function(id) {
+			console.log(user + ' onMessageSent: id=' + id);
 		},
-		onMessageDelivered: function(msgId) {
-			console.log(user + ' onMessageDelivered: msgId=' + msgId);
-		},
-		onMessageFailed: function(msgId, status, comment) {
-			console.log(user + ' onMessageFailed: msgId=' + msgId + ', status=' + status + ', comment=' + comment);
-		},
-		onFileReceiveStarted: function(id, contentType, filename, size, description) {
-			var el = document.getElementById(user + '-details');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onMessageDelivered: function(id) {
+			console.log(user + ' onMessageDelivered: id=' + id);
+			if (id === sFileMsgId) {
+				var el = document.getElementById(user + '-result');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				el.appendChild(document.createTextNode('Send successful!'));
 			}
-			el.appendChild(document.createTextNode('Receiving File: id=' + id + ', contentType=' + contentType + ', filename=' + filename + ', size=' + size + ', description=' + description));
-			lastFilename = filename;
-			progressInterval = setInterval(updateProgress, 500);
-			receiver = user;
-			rBytes = rBytesDelta = 0;
 		},
-		onFileReceiveChunk: function(id, receivedBytes) {
-			rBytesDelta += receivedBytes - rBytes;
-			rBytes = receivedBytes;
-		},
-		onFileReceiveCompleted: function(id, contentType, file) {
-			var el = document.getElementById(user + '-result');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onMessageSendFailed: function(id, status, comment) {
+			console.log(user + ' onMessageSendFailed: id=' + id + ', status=' + status + ', comment=' + comment);
+			if (id === sFileMsgId) {
+				var el = document.getElementById(user + '-result');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				el.appendChild(document.createTextNode('Send failed!'));
 			}
-			var url = URL.createObjectURL(file);
-			var a = document.createElement('a');
-			a.href = url;
-			a.target = '_blank';
-			a.download = lastFilename;
-			a.appendChild(document.createTextNode('Download file'));
-			el.appendChild(a);
-			console.log(user + ' onFileReceiveCompleted: id=' + id + ', contentType=' + contentType + ', size=' + file.size);
-			clearInterval(progressInterval);
-			updateProgress();
 		},
-		onFileReceiveAborted: function(id) {
-			var el = document.getElementById(user + '-result');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onFirstChunkReceived: function(id, contentType, filename, size, description) {
+			if (filename) {
+				var el = document.getElementById(user + '-details');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				el.appendChild(document.createTextNode('Receiving File: id=' + id + ', contentType=' + contentType + ', filename=' + filename + ', size=' + size + ', description=' + description));
+				lastFilename = filename;
+				progressInterval = setInterval(updateProgress, 500);
+				receiver = user;
+				rBytes = rBytesDelta = 0;
+				rFileMsgId = id;
 			}
-			el.appendChild(document.createTextNode('Receive aborted!'));
-			clearInterval(progressInterval);
 		},
-		onFileReceiveTimeout: function(id) {
-			var el = document.getElementById(user + '-result');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onChunkReceived: function(id, receivedBytes) {
+			if (id === rFileMsgId) {
+				rBytesDelta += receivedBytes - rBytes;
+				rBytes = receivedBytes;
 			}
-			el.appendChild(document.createTextNode('Receive timeout!'));
-			clearInterval(progressInterval);
 		},
-		onFileSendChunk: function(id, sentBytes) {
-			sBytes = sentBytes;
-			sender = user;
-		},
-		onFileSendCompleted: function(id) {
-			var el = document.getElementById(user + '-result');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onMessageReceiveAborted: function(id, partialBody) {
+			if (id === rFileMsgId) {
+				var el = document.getElementById(user + '-result');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				el.appendChild(document.createTextNode('Receive aborted!'));
+				clearInterval(progressInterval);
 			}
-			el.appendChild(document.createTextNode('Send successful!'));
 		},
-		onFileSendFailed: function(id, status, comment) {
-			var el = document.getElementById(user + '-result');
-			while (el.hasChildNodes()) {
-				el.removeChild(el.firstChild);
+		onMessageReceiveTimeout: function(id) {
+			if (id === rFileMsgId) {
+				var el = document.getElementById(user + '-result');
+				while (el.hasChildNodes()) {
+					el.removeChild(el.firstChild);
+				}
+				el.appendChild(document.createTextNode('Receive timeout!'));
+				clearInterval(progressInterval);
 			}
-			el.appendChild(document.createTextNode('Send failed!'));
+		},
+		onChunkSent: function(id, sentBytes) {
+			if (id === sFileMsgId) {
+				sBytes = sentBytes;
+				sender = user;
+			}
 		}
 	};
 };
@@ -127,8 +139,8 @@ function dropHandler(user, session) {
 		evt.stopPropagation();
 		evt.preventDefault();
 		
-		var msgId = session.send(evt.dataTransfer.files[0], null, 'Drag n Drop file');
-	}
+		sFileMsgId = session.send(evt.dataTransfer.files[0], null, 'Drag n Drop file');
+	};
 }
 
 function addListeners(element, user, session) {
