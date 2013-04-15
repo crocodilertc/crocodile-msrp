@@ -45,6 +45,7 @@ size (crocodile-msrp.min.js).
 * qunit: Attempts to run any unit tests under PhantomJS. This is not currently
 working with PhantomJS 0.9, and thus has been removed from the default build
 target. To run the unit tests successfully, open test/test.html in a browser.
+* jsdoc: Generates HTML documentation for the public library interfaces.
 
 Building documentation
 ====================== 
