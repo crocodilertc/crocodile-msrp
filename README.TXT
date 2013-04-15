@@ -47,16 +47,6 @@ working with PhantomJS 0.9, and thus has been removed from the default build
 target. To run the unit tests successfully, open test/test.html in a browser.
 * jsdoc: Generates HTML documentation for the public library interfaces.
 
-Building documentation
-====================== 
-
-Documentation can be generated from the comments within the source. To 
-do this:
-
-* Download and install JSDoc Toolkit (http://code.google.com/p/jsdoc-toolkit/)
-* Run the following command line in the JSDoc directory:
-java -jar jsrun.jar app/run.js -t=templates/jsdoc -d=<output dir> <src dir/files>
-
 Testing
 ======= 
 
