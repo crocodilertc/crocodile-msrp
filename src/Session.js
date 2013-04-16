@@ -915,7 +915,7 @@ var CrocMSRP = (function(CrocMSRP) {
 				receiver.abort();
 				delete session.chunkReceivers[msgId];
 				try {
-					session.eventObj.onMessageReceiveTimeout(msgId);
+					session.eventObj.onMessageReceiveTimeout(msgId, receiver.blob);
 				} catch (e) {
 					console.log('Unexpected application exception: ' + e);
 				}

@@ -142,8 +142,9 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * Event callback indicating that an incoming message has timed out.
 	 * 
 	 * @param {String} id The Message ID of the timed-out message.
+	 * @param {Blob} partialBody The partially-received message body.
 	 */
-	CrocMSRP.Events.prototype.onMessageReceiveTimeout = function(id) {
+	CrocMSRP.Events.prototype.onMessageReceiveTimeout = function(id, partialBody) {
 	};
 	
 	/**
