@@ -489,6 +489,95 @@ var CrocMSRP = (function(CrocMSRP) {
 		return m;
 	};
 
+	CrocMSRP.Sdp.parseFileAttributes = function (media) {
+		var fileParams = {}, position = 0, selector = {},
+			colonIndex, name, value, endIndex,
+			fileSelectorString = media.attributes['file-selector'];
+		
+		// Separate the file-selector components
+		while (position < fileSelectorString.length) {
+			if (fileSelectorString.charAt(position) === ' ') {
+				position++;
+				continue;
+			}
+			
+			colonIndex = fileSelectorString.indexOf(':', position);
+			if (colonIndex === -1) {
+				break;
+			}
+
+			name = fileSelectorString.slice(position, colonIndex);
+			position = colonIndex + 1;
+			
+			if (fileSelectorString.charAt(position) === '"') {
+				// Grab everything within the quotes (possibly including spaces)
+				position++;
+				endIndex = fileSelectorString.indexOf('"', position);
+				if (endIndex === -1) {
+					break;
+				}
+				value = fileSelectorString.slice(position, endIndex);
+				position = endIndex + 1;
+			} else if (name === 'type') {
+				var quoted = false;
+				// Further parsing needed; find the next unquoted space
+				endIndex = position;
+				while (endIndex < fileSelectorString.length &&
+						(quoted || fileSelectorString.charAt(endIndex) !== ' ')) {
+					if (fileSelectorString.charAt(endIndex) === '"') {
+						quoted = !quoted;
+					}
+					endIndex++;
+				}
+				value = new CrocMSRP.ContentType();
+				value.parseSdpTypeSelector(fileSelectorString.slice(position, endIndex));
+				position = endIndex + 1;
+			} else {
+				// Grab everything until the next space
+				endIndex = fileSelectorString.indexOf(' ', position);
+				if (endIndex === -1) {
+					endIndex = fileSelectorString.length;
+				}
+				value = fileSelectorString.slice(position, endIndex);
+				position = endIndex + 1;
+			}
+		
+			switch (name) {
+			case 'name':
+				selector.name = CrocMSRP.util.decodeSdpFileName(value);
+				break;
+			case 'size':
+				selector.size = parseInt(value, 10);
+				break;
+			case 'type':
+				selector.type = value;
+				break;
+			case 'hash':
+				if (!selector.hash) {
+					selector.hash = {};
+				}
+				colonIndex = value.indexOf(':');
+				selector.hash[value.substring(0, colonIndex)] =
+					value.substring(colonIndex + 1);
+				break;
+			default:
+				continue;
+			}
+		}
+		fileParams.selector = selector;
+		
+		fileParams.id = media.attributes['file-transfer-id'];
+		fileParams.disposition = media.attributes['file-disposition'] || 'render';
+		if (media.title) {
+			fileParams.description = media.title;
+		}
+		if (media.attributes['file-icon']) {
+			fileParams.icon = media.attributes['file-icon'];
+		}
+		
+		return fileParams;
+	};
+	
 	return CrocMSRP;
 }(CrocMSRP || {}));
 
