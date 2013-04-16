@@ -15,6 +15,7 @@
     "console": false,
     "hex_md5": false,
 	"File": false,
-    "CrocMSRP": true
+    "CrocMSRP": true,
+    "JsSIP": false
   }
 }

@@ -9,6 +9,7 @@ var CrocMSRP;
 
 var CrocMSRP = (function(CrocMSRP) {
 	var paramSep = ', ';
+	var md5 = JsSIP.Utils.calculateMD5 || hex_md5;
 	
 	/**
 	 * Performs HTTP digest authentication.
@@ -34,21 +35,21 @@ var CrocMSRP = (function(CrocMSRP) {
 		authorization += paramSep + 'uri="' + digestUri + '"';
 		
 		// HA1 = MD5(A1) = MD5(username:realm:password)
-		HA1 = hex_md5(config.username + ':' + authenticate.realm + ':' + config.password);
+		HA1 = md5(config.username + ':' + authenticate.realm + ':' + config.password);
 		// HA2 = MD5(A2) = MD5(method:digestUri)
 		// Some confusion over what to use as the method; Kamailio uses "MSRP"
 		if (config.digestMethod) {
-			HA2 = hex_md5(config.digestMethod + ':' + digestUri);
+			HA2 = md5(config.digestMethod + ':' + digestUri);
 		} else {
-			HA2 = hex_md5(req.method + ':' + digestUri);
+			HA2 = md5(req.method + ':' + digestUri);
 		}
 
 		if (qop) {
 			// response = MD5(HA1:nonce:nc:cnonce:qop:HA2)
-			response = hex_md5(HA1 + ':' + authenticate.nonce + ':' + nc + ':' + cnonce + ':auth:' + HA2);
+			response = md5(HA1 + ':' + authenticate.nonce + ':' + nc + ':' + cnonce + ':auth:' + HA2);
 		} else {
 			// response = MD5(HA1:nonce:HA2)
-			response = hex_md5(HA1 + ':' + authenticate.nonce + ':' + HA2);
+			response = md5(HA1 + ':' + authenticate.nonce + ':' + HA2);
 		}
 		authorization += paramSep + 'response="' + response + '"';
 		

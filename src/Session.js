@@ -426,8 +426,8 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * rejected.
 	 */
 	CrocMSRP.Session.prototype.close = function() {
-		this.abortFileReceive();
-		this.abortFileSend();
+		this.abortReceive();
+		this.abortSend();
 		changeState(this, states.CLOSED);
 	};
 
