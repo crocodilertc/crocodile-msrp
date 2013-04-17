@@ -542,7 +542,7 @@ var CrocMSRP = (function(CrocMSRP) {
 						try {
 							this.eventObj.onMessageReceiveAborted(msgId, chunkReceiver.blob);
 						} catch (e) {
-							console.log('Unexpected application exception: ' + e);
+							console.warn('Unexpected application exception: ' + e.stack);
 						}
 
 						return;
@@ -566,7 +566,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			if (e instanceof CrocMSRP.Exceptions.UnsupportedMedia) {
 				status = CrocMSRP.Status.UNSUPPORTED_MEDIA;
 			} else {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 			sendResponse(req, this.con, this.localUri, status);
 			return;
@@ -623,7 +623,7 @@ var CrocMSRP = (function(CrocMSRP) {
 				this.eventObj.onMessageSendFailed(msgId, report.status, report.comment);
 			}
 		} catch (e) {
-			console.log('Unexpected application exception: ' + e);
+			console.warn('Unexpected application exception: ' + e.stack);
 		}
 	};
 	
@@ -676,7 +676,7 @@ var CrocMSRP = (function(CrocMSRP) {
 					this.eventObj.onMessageSent(msgId);
 				}
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 		} else {
 			// Failure response
@@ -690,7 +690,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			try {
 				this.eventObj.onMessageSendFailed(msgId, resp.status, resp.comment);
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 		}
 	};
@@ -703,7 +703,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			try {
 				session.eventObj.onMessageSendFailed(msgId, CrocMSRP.Status.REQUEST_TIMEOUT, 'Report Timeout');
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 		};
 	}
@@ -727,7 +727,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			try {
 				session.eventObj.onAuthenticated();
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 			break;
 		case states.ESTABLISHED:
@@ -747,7 +747,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			try {
 				session.eventObj.onAuthFailed();
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 			session.con.removeSession(session.sessionId);
 			break;
@@ -757,7 +757,7 @@ var CrocMSRP = (function(CrocMSRP) {
 			try {
 				session.eventObj.onError();
 			} catch (e) {
-				console.log('Unexpected application exception: ' + e);
+				console.warn('Unexpected application exception: ' + e.stack);
 			}
 			session.con.removeSession(session.sessionId);
 			break;
@@ -917,7 +917,7 @@ var CrocMSRP = (function(CrocMSRP) {
 				try {
 					session.eventObj.onMessageReceiveTimeout(msgId, receiver.blob);
 				} catch (e) {
-					console.log('Unexpected application exception: ' + e);
+					console.warn('Unexpected application exception: ' + e.stack);
 				}
 			}
 		}
