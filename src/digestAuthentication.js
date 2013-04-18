@@ -9,7 +9,7 @@ var CrocMSRP;
 
 var CrocMSRP = (function(CrocMSRP) {
 	var paramSep = ', ';
-	var md5 = typeof JsSIP == 'undefined' ? hex_md5 : JsSIP.Utils.calculateMD5;
+	var md5 = typeof JsSIP === 'undefined' ? hex_md5 : JsSIP.Utils.calculateMD5;
 	
 	/**
 	 * Performs HTTP digest authentication.
