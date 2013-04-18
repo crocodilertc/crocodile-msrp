@@ -27,6 +27,11 @@ function makeEventObj(user) {
 				while (el.hasChildNodes()) {
 					el.removeChild(el.firstChild);
 				}
+				
+				if (body instanceof ArrayBuffer ||
+						body instanceof String || typeof body === 'string') {
+					body = new Blob([body], {type:contentType});
+				}
 				var url = URL.createObjectURL(body);
 				var a = document.createElement('a');
 				a.href = url;

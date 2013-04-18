@@ -47,10 +47,12 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * 
 	 * @param {String} id The Message ID of the received message.
 	 * @param {String} contentType The MIME type of the received message.
-	 * @param {String|Blob} body The body of the received message. Blob data may
-	 * be read using a FileReader object (http://www.w3.org/TR/FileAPI/), or
-	 * used within the page DOM by turning it into a URL:
-	 * <code>var url = URL.createObjectURL(blob);</code>.
+	 * @param {String|ArrayBuffer|Blob} body The body of the received message.
+	 * Text data will be presented as a String. Binary data may be presented
+	 * as an ArrayBuffer or a Blob, depending on whether the data fit into a
+	 * single chunk. Blob data can be accessed using a FileReader object
+	 * (http://www.w3.org/TR/FileAPI/), or used within the page DOM by turning
+	 * it into a URL: <code>var url = URL.createObjectURL(blob);</code>.
 	 * @throws {CrocMSRP.Exceptions.UnsupportedMedia} If the received MIME type
 	 * is not recognised/supported by the application. An appropriate error will
 	 * be returned to the relay in this case.

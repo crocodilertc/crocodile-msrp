@@ -459,30 +459,19 @@ var CrocMSRP = (function(CrocMSRP) {
 					if (req.contentDisposition &&
 							(req.contentDisposition.type === 'attachment' ||
 							req.contentDisposition.type === 'render')) {
-						// Single chunk file transfer
-						// For consistency, files are always provided as blobs
-						chunkReceiver = new CrocMSRP.ChunkReceiver(req, this.config.recvBuffer);
+						// File transfer, extract any extra details
 						description = req.getHeader('content-description');
 						filename = req.contentDisposition.param.filename;
-				
-						this.eventObj.onFirstChunkReceived(msgId, req.contentType,
-							filename, size, description);
-						if (this.eventObj.onChunkReceived) {
-							this.eventObj.onChunkReceived(msgId,
-								chunkReceiver.receivedBytes);
-						}
-						this.eventObj.onMessageReceived(msgId,
-								chunkReceiver.blob.type, chunkReceiver.blob);
-					} else {
-						// Single chunk message
-						this.eventObj.onFirstChunkReceived(msgId, req.contentType,
-								filename, size, description);
-						if (this.eventObj.onChunkReceived) {
-							this.eventObj.onChunkReceived(msgId, size);
-						}
-						this.eventObj.onMessageReceived(msgId, req.contentType,
-								req.body);
 					}
+
+					// Fire the appropriate event handlers
+					this.eventObj.onFirstChunkReceived(msgId, req.contentType,
+							filename, size, description);
+					if (this.eventObj.onChunkReceived) {
+						this.eventObj.onChunkReceived(msgId, size);
+					}
+					this.eventObj.onMessageReceived(msgId, req.contentType,
+							req.body);
 				}
 			} else {
 				// Chunk of a multiple-chunk message
