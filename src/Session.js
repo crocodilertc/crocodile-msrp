@@ -352,8 +352,8 @@ var CrocMSRP = (function(CrocMSRP) {
 	
 	/**
 	 * Sends a message (or file) over an established session.
-	 * @param {String|Blob|File} body The message body to send (may be binary
-	 * data/file).
+	 * @param {String|ArrayBuffer|ArrayBufferView|Blob|File} body The message
+	 * body to send (may be binary data/file).
 	 * @param {String} [contentType] The MIME type of the provided body.
 	 * @returns {String} The Message-ID of the sent message. This can be used
 	 * to correlate notifications with the appropriate message.
@@ -369,6 +369,8 @@ var CrocMSRP = (function(CrocMSRP) {
 			type = contentType || 'text/plain';
 		} else if (body instanceof Blob) {
 			type = contentType || body.type || 'application/octet-stream';
+		} else { // ArrayBuffer or view
+			type = contentType || 'application/octet-stream';
 		}
 		
 		sender = new CrocMSRP.ChunkSender(this, body, type);

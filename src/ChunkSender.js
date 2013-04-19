@@ -12,8 +12,9 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @class Manages the sending of a message, dividing it into chunks
 	 * if required.
 	 * @param {CrocMSRP.Session} session The session sending the message.
-	 * @param {String|Blob|File} [body] The body of the message to send. If this
-	 * is null or undefined then an empty SEND message will be sent.
+	 * @param {String|ArrayBuffer|ArrayBufferView|Blob|File} [body] The body of
+	 * the message to send. If this is null or undefined then an empty SEND
+	 * message will be sent.
 	 * @param {String} [contentType] The MIME type of the message.
 	 * @param {String} [disposition] The disposition of the message (defaults to
 	 * 'inline' if not provided, or 'attachment' if the body is a File object).
@@ -42,6 +43,12 @@ var CrocMSRP = (function(CrocMSRP) {
 			this.blob = new Blob([body]);
 			this.contentType = contentType || 'text/plain';
 			this.disposition = disposition;
+		} else if (body instanceof ArrayBuffer || body instanceof ArrayBufferView) {
+			this.blob = new Blob([body]);
+			this.contentType = contentType || 'application/octet-stream';
+			this.disposition = disposition;
+		} else {
+			throw new TypeError('Body has unexpected type:', body);
 		}
 		
 		this.session = session;

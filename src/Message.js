@@ -169,11 +169,11 @@ var CrocMSRP = (function(CrocMSRP) {
 			}
 			msg = msg.concat('Content-Type: ', type, lineEnd, lineEnd);
 			
-			if (this.body instanceof Blob) {
+			if (this.body instanceof String || typeof this.body === 'string') {
+				msg = msg.concat(this.body, lineEnd, end);
+			} else {
 				// Turn the entire message into a blob, encapsulating the body
 				msg = new Blob([msg, this.body, lineEnd, end]);
-			} else {
-				msg = msg.concat(this.body, lineEnd, end);
 			}
 		} else {
 			msg += end;
