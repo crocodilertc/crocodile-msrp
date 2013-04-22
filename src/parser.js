@@ -91,9 +91,8 @@ var CrocMSRP = (function(CrocMSRP) {
 				return null;
 			}
 			if (data instanceof ArrayBuffer) {
-				// Create a blob, setting the content type appropriately
-				msgObj.body = new Blob([new Uint8Array(data.slice(startIndex, endIndex))],
-					{type: msgObj.contentType});
+				// Slice out the body of the message from the original ArrayBuffer
+				msgObj.body = data.slice(startIndex, endIndex);
 			} else {
 				// Assume we're only dealing with text
 				msgObj.body = msg.substring(startIndex, endIndex);

@@ -43,7 +43,12 @@ var CrocMSRP = (function(CrocMSRP) {
 			this.blob = new Blob([body]);
 			this.contentType = contentType || 'text/plain';
 			this.disposition = disposition;
-		} else if (body instanceof ArrayBuffer || body instanceof ArrayBufferView) {
+		} else if (body instanceof ArrayBuffer) {
+			// Stop Chrome complaining about ArrayBuffer in Blob constructor
+			this.blob = new Blob([new Uint8Array(body)]);
+			this.contentType = contentType || 'application/octet-stream';
+			this.disposition = disposition;
+		} else if (body instanceof ArrayBufferView) {
 			this.blob = new Blob([body]);
 			this.contentType = contentType || 'application/octet-stream';
 			this.disposition = disposition;
