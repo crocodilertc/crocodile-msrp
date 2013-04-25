@@ -73,7 +73,9 @@ var CrocMSRP = (function(CrocMSRP) {
 		
 		if (chunk.body instanceof ArrayBuffer) {
 			// Yay! Binary frame, everything is straightforward.
-			chunkBody = chunk.body;
+			// Convert to ArrayBufferView to avoid Chrome Blob constructor warning
+			// This should not be necessary: https://bugs.webkit.org/show_bug.cgi?id=88389
+			chunkBody = new Uint8Array(chunk.body);
 			chunkSize = chunkBody.byteLength;
 		} else {
 			// Boo. Text frame: turn it back into UTF-8 and cross your fingers
