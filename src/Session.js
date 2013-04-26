@@ -117,11 +117,11 @@ var CrocMSRP = (function(CrocMSRP) {
 		media = new CrocMSRP.Sdp.Media();
 		media.port = this.localUri.port;
 		media.proto = (this.localUri.secure) ? 'TCP/TLS/MSRP' : 'TCP/MSRP';
-		media.attributes['accept-types'] = this.config.acceptTypes.join(' ');
+		media.addAttribute('accept-types', this.config.acceptTypes.join(' '));
 		if (this.config.acceptWrappedTypes && this.config.acceptWrappedTypes.length > 0) {
-			media.attributes['accept-wrapped-types'] = this.config.acceptWrappedTypes.join(' ');
+			media.addAttribute('accept-wrapped-types', this.config.acceptWrappedTypes.join(' '));
 		}
-		media.attributes['path'] = this.relayPath.slice().reverse().join(' ') + ' ' + this.localUri;
+		media.addAttribute('path', this.relayPath.slice().reverse().join(' ') + ' ' + this.localUri);
 		
 		if (this.file) {
 			// This is an outgoing file transfer session; add extra SDP
@@ -171,13 +171,13 @@ var CrocMSRP = (function(CrocMSRP) {
 				}
 				selector = selector.concat('hash:', hash, ':', params.selector.hash[hash]);
 			}
-			media.attributes['file-selector'] = selector;
-			media.attributes['file-transfer-id'] = params.id;
-			media.attributes['file-disposition'] = params.disposition;
+			media.addAttribute('file-selector', selector);
+			media.addAttribute('file-transfer-id', params.id);
+			media.addAttribute('file-disposition', params.disposition);
 			if (params.icon) {
-				media.attributes['file-icon'] = params.icon;
+				media.addAttribute('file-icon', params.icon);
 			}
-			media.attributes['sendonly'] = null;
+			media.addAttribute('sendonly', null);
 		}
 		
 		// Construct the entire SDP message, appending the media 'line'
@@ -222,11 +222,11 @@ var CrocMSRP = (function(CrocMSRP) {
 			
 			if (media.media === 'message' && media.port !== 0 &&
 					media.attributes['path'] && media.attributes['accept-types']) {
-				this.farEndPath = media.attributes['path'].split(' ');
+				this.farEndPath = media.attributes['path'][0].split(' ');
 				this.toPath = this.relayPath.concat(this.farEndPath);
-				this.acceptTypes = media.attributes['accept-types'].split(' ');
+				this.acceptTypes = media.attributes['accept-types'][0].split(' ');
 				if (media.attributes['accept-wrapped-types']) {
-					this.acceptWrappedTypes = media.attributes['accept-wrapped-types'].split(' ');
+					this.acceptWrappedTypes = media.attributes['accept-wrapped-types'][0].split(' ');
 				} else {
 					this.acceptWrappedTypes = [];
 				}
@@ -311,11 +311,11 @@ var CrocMSRP = (function(CrocMSRP) {
 					(media.proto === 'TCP/MSRP' || media.proto === 'TCP/TLS/MSRP') &&
 					media.attributes['path'] && media.attributes['accept-types']) {
 				// Process the SDP attributes we need
-				this.farEndPath = media.attributes['path'].split(' ');
+				this.farEndPath = media.attributes['path'][0].split(' ');
 				this.toPath = this.relayPath.concat(this.farEndPath);
-				this.acceptTypes = media.attributes['accept-types'].split(' ');
+				this.acceptTypes = media.attributes['accept-types'][0].split(' ');
 				if (media.attributes['accept-wrapped-types']) {
-					this.acceptWrappedTypes = media.attributes['accept-wrapped-types'].split(' ');
+					this.acceptWrappedTypes = media.attributes['accept-wrapped-types'][0].split(' ');
 				} else {
 					this.acceptWrappedTypes = [];
 				}
@@ -324,24 +324,22 @@ var CrocMSRP = (function(CrocMSRP) {
 					// application/user can make an informed decision on
 					// whether or not to accept the file.
 					this.fileParams = CrocMSRP.Sdp.parseFileAttributes(media);
-					delete media.attributes['sendonly'];
-					media.attributes['recvonly'] = null;
+					media.replaceAttribute('sendonly', 'recvonly', null);
 				}
 				changeState(this, states.ESTABLISHED);
 				suitableMediaFound = true;
 				
 				// Now set the media answer values
+				media.resetAttributes();
 				media.port = this.localUri.port;
 				media.proto = (this.localUri.secure) ? 'TCP/TLS/MSRP' : 'TCP/MSRP';
-				media.attributes['accept-types'] = this.config.acceptTypes.join(' ');
+				media.addAttribute('accept-types', this.config.acceptTypes.join(' '));
 				if (this.config.acceptWrappedTypes &&
 						this.config.acceptWrappedTypes.length > 0) {
-					media.attributes['accept-wrapped-types'] =
-						this.config.acceptWrappedTypes.join(' ');
-				} else {
-					delete media.attributes['accept-wrapped-types'];
+					media.addAttribute('accept-wrapped-types',
+						this.config.acceptWrappedTypes.join(' '));
 				}
-				media.attributes['path'] = this.relayPath.slice().reverse().join(' ') + ' ' + this.localUri;
+				media.addAttribute('path', this.relayPath.slice().reverse().join(' ') + ' ' + this.localUri);
 			} else {
 				media.port = 0;
 			}

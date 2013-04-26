@@ -38,11 +38,38 @@ var CrocMSRP = (function(CrocMSRP) {
 		this.timing = [new CrocMSRP.Sdp.Timing()];
 		this.timezone = null;
 		this.key = null;
-		this.attributes = {};
+		this.resetAttributes();
 		this.media = [];
 	};
+	CrocMSRP.Sdp.Session.prototype.addAttribute = function(name, value) {
+		if (!this.attributes[name]) {
+			this.attributes[name] = [];
+			this.attributeNameOrder.push(name);
+		}
+		this.attributes[name].push(value);
+	};
+	CrocMSRP.Sdp.Session.prototype.removeAttribute = function(name) {
+		if (this.attributes[name]) {
+			delete this.attributes[name];
+			this.attributeNameOrder.splice(
+					this.attributeNameOrder.indexOf(name), 1);
+		}
+	};
+	CrocMSRP.Sdp.Session.prototype.replaceAttribute = function(oldName, newName, newValue) {
+		if (this.attributes[oldName]) {
+			delete this.attributes[oldName];
+			this.addAttribute(newName, newValue);
+			this.attributeNameOrder.splice(this.attributeNameOrder.lastIndexOf(newName), 1);
+			this.attributeNameOrder.splice(
+					this.attributeNameOrder.indexOf(oldName), 1, newName);
+		}
+	};
+	CrocMSRP.Sdp.Session.prototype.resetAttributes = function() {
+		this.attributeNameOrder = [];
+		this.attributes = {};
+	};
 	CrocMSRP.Sdp.Session.prototype.parse = function(sdp) {
-		var line, lines = sdp.split(lineEnd), value, colonIndex;
+		var line, lines = sdp.split(lineEnd), value, colonIndex, aName;
 		
 		this.reset();
 		
@@ -151,10 +178,13 @@ var CrocMSRP = (function(CrocMSRP) {
 			case 'a=':
 				colonIndex = value.indexOf(':');
 				if (colonIndex === -1) {
-					this.attributes[value] = null;
+					aName = value;
+					value = null;
 				} else {
-					this.attributes[value.substr(0, colonIndex)] = value.substr(colonIndex + 1);
+					aName = value.substr(0, colonIndex);
+					value = value.substr(colonIndex + 1);
 				}
+				this.addAttribute(aName, value);
 				break;
 			default:
 				console.log('Unexpected SDP line (pre-media): ' + line);
@@ -179,7 +209,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		return true;
 	};
 	CrocMSRP.Sdp.Session.prototype.toString = function() {
-		var sdp = '', index;
+		var sdp = '', index, aName, aValues;
 		
 		sdp += 'v=' + this.version + lineEnd;
 		sdp += 'o=' + this.origin + lineEnd;
@@ -211,10 +241,16 @@ var CrocMSRP = (function(CrocMSRP) {
 		if (this.key) {
 			sdp += 'k=' + this.key + lineEnd;
 		}
-		for (index in this.attributes) {
-			sdp += 'a=' + index;
-			if (this.attributes[index]) {
-				sdp += ':' + this.attributes[index] + lineEnd;
+		for (var i = 0, len = this.attributeNameOrder.length; i < len; i++) {
+			aName = this.attributeNameOrder[i];
+			aValues = this.attributes[aName];
+
+			for (index in aValues) {
+				sdp += 'a=' + aName;
+				if (aValues[index]) {
+					sdp += ':' + aValues[index];
+				}
+				sdp += lineEnd;
 			}
 		}
 		for (index in this.media) {
@@ -403,10 +439,37 @@ var CrocMSRP = (function(CrocMSRP) {
 		this.connection = null;
 		this.bandwidth = [];
 		this.key = null;
+		this.resetAttributes();
+	};
+	CrocMSRP.Sdp.Media.prototype.addAttribute = function(name, value) {
+		if (!this.attributes[name]) {
+			this.attributes[name] = [];
+			this.attributeNameOrder.push(name);
+		}
+		this.attributes[name].push(value);
+	};
+	CrocMSRP.Sdp.Media.prototype.removeAttribute = function(name) {
+		if (this.attributes[name]) {
+			delete this.attributes[name];
+			this.attributeNameOrder.splice(
+					this.attributeNameOrder.indexOf(name), 1);
+		}
+	};
+	CrocMSRP.Sdp.Media.prototype.resetAttributes = function() {
+		this.attributeNameOrder = [];
 		this.attributes = {};
 	};
+	CrocMSRP.Sdp.Media.prototype.replaceAttribute = function(oldName, newName, newValue) {
+		if (this.attributes[oldName]) {
+			delete this.attributes[oldName];
+			this.addAttribute(newName, newValue);
+			this.attributeNameOrder.splice(this.attributeNameOrder.lastIndexOf(newName), 1);
+			this.attributeNameOrder.splice(
+					this.attributeNameOrder.indexOf(oldName), 1, newName);
+		}
+	};
 	CrocMSRP.Sdp.Media.prototype.parse = function(media) {
-		var lines, mLine, tokens, index;
+		var lines, mLine, tokens, index, aName;
 		
 		this.reset();
 		
@@ -420,7 +483,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 
 		this.media = tokens.shift();
-		this.port = tokens.shift();
+		this.port = parseInt(tokens.shift(), 10);
 		this.proto = tokens.shift();
 		this.format = tokens.join(' ');
 		
@@ -446,10 +509,13 @@ var CrocMSRP = (function(CrocMSRP) {
 			case 'a=':
 				colonIndex = value.indexOf(':');
 				if (colonIndex === -1) {
-					this.attributes[value] = null;
+					aName = value;
+					value = null;
 				} else {
-					this.attributes[value.substr(0, colonIndex)] = value.substr(colonIndex + 1);
+					aName = value.substr(0, colonIndex);
+					value = value.substr(colonIndex + 1);
 				}
+				this.addAttribute(aName, value);
 				break;
 			default:
 				console.log('Unexpected type (within media): ' + lines[index]);
@@ -460,7 +526,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		return true;
 	};
 	CrocMSRP.Sdp.Media.prototype.toString = function() {
-		var m = '', index;
+		var m = '', index, aName, aValues;
 		
 		m += this.media + ' ';
 		m += this.port + ' ';
@@ -479,10 +545,15 @@ var CrocMSRP = (function(CrocMSRP) {
 		if (this.key) {
 			m += lineEnd + 'k=' + this.key;
 		}
-		for (index in this.attributes) {
-			m += lineEnd + 'a=' + index;
-			if (this.attributes[index]) {
-				m += ':' + this.attributes[index];
+		for (var i = 0, len = this.attributeNameOrder.length; i < len; i++) {
+			aName = this.attributeNameOrder[i];
+			aValues = this.attributes[aName];
+
+			for (index in aValues) {
+				m += lineEnd + 'a=' + aName;
+				if (aValues[index]) {
+					m += ':' + aValues[index];
+				}
 			}
 		}
 		
@@ -492,7 +563,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	CrocMSRP.Sdp.parseFileAttributes = function (media) {
 		var fileParams = {}, position = 0, selector = {},
 			colonIndex, name, value, endIndex,
-			fileSelectorString = media.attributes['file-selector'];
+			fileSelectorString = media.attributes['file-selector'][0];
 		
 		// Separate the file-selector components
 		while (position < fileSelectorString.length) {
@@ -566,13 +637,13 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 		fileParams.selector = selector;
 		
-		fileParams.id = media.attributes['file-transfer-id'];
-		fileParams.disposition = media.attributes['file-disposition'] || 'render';
+		fileParams.id = media.attributes['file-transfer-id'][0];
+		fileParams.disposition = media.attributes['file-disposition'][0] || 'render';
 		if (media.title) {
 			fileParams.description = media.title;
 		}
 		if (media.attributes['file-icon']) {
-			fileParams.icon = media.attributes['file-icon'];
+			fileParams.icon = media.attributes['file-icon'][0];
 		}
 		
 		return fileParams;
