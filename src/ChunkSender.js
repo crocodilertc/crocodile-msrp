@@ -119,10 +119,10 @@ var CrocMSRP = (function(CrocMSRP) {
 				chunk.continuationFlag = CrocMSRP.Message.Flag.continued;
 			} else if (this.onReportTimeout) {
 				var sender = this;
-				this.reportTimer = setTimeout(
-					function() {sender.onReportTimeout();},
-					this.config.reportTimeout
-				);
+				this.reportTimer = setTimeout(function() {
+					sender.onReportTimeout();
+					sender.reportTimer = null;
+				}, this.config.reportTimeout);
 			}
 			this.sentBytes = end;
 		}
@@ -229,6 +229,17 @@ var CrocMSRP = (function(CrocMSRP) {
 	 */
 	CrocMSRP.ChunkSender.prototype.abort = function() {
 		this.aborted = true;
+
+		if (this.reportTimer) {
+			// Treat this as an immediate report timeout
+			clearTimeout(this.reportTimer);
+
+			var sender = this;
+			this.reportTimer = setTimeout(function() {
+				sender.onReportTimeout();
+				sender.reportTimer = null;
+			}, 0);
+		}
 	};
 	
 	return CrocMSRP;
