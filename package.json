@@ -1,7 +1,7 @@
 {
   "name": "crocodile-msrp",
   "title": "Crocodile MSRP",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Javascript MSRP over WebSocket stack",
   "keywords": [
     "msrp",

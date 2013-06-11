@@ -2,7 +2,7 @@ Crocodile MSRP
 Javascript MSRP over WebSocket stack
 http://code.google.com/p/crocodile-msrp/
 
-Copyright (c) 2012 Crocodile RCS Ltd
+Copyright (c) 2012-2013 Crocodile RCS Ltd
 http://www.crocodile-rcs.com
 
 Released under the MIT license - see LICENSE.TXT.
@@ -10,11 +10,15 @@ Released under the MIT license - see LICENSE.TXT.
 Dependencies
 ============
 
-The following dependencies are included in the distribution:
+All dependencies for the library are included in the libs/ directory.
+
+The following dependencies are required at runtime:
 
 md5.js v2.2
 Copyright (C) Paul Johnston 1999 - 2009
 Distributed under the BSD License.
+
+The following dependencies are used during unit testing:
 
 QUnit v1.11.0
 Copyright 2012 jQuery Foundation and other contributors
