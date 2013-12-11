@@ -1,7 +1,7 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
 

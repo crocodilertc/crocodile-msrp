@@ -1,7 +1,7 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
 
@@ -15,7 +15,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * is created.
 	 * @class Represents a single connection to a websocket MSRP relay.
 	 */
-	CrocMSRP.Connection = function(relayWsUri, relayMsrpUri, config) {
+	function RelayConnection(relayWsUri, relayMsrpUri, config) {
 		var option, defaultConfig = new CrocMSRP.ConnectionConfig();
 
 		// Process any optional configuration options
@@ -43,13 +43,13 @@ var CrocMSRP = (function(CrocMSRP) {
 		this.activeSenders = [];
 		// The count of outstanding sends
 		this.outstandingSends = 0;
-	};
+	}
 
 	/**
 	 * Connects to the websocket server.
 	 * @private
 	 */
-	CrocMSRP.Connection.prototype.connect = function() {
+	RelayConnection.prototype.connect = function() {
 		if (!this.ws) {
 			this.ws = new CrocMSRP.WSWrapper(this, this.config.relayWsUri);
 		}
@@ -66,7 +66,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {CrocMSRP.Events} eventObj An object containing event callbacks
 	 * to use for the new session.
 	 */
-	CrocMSRP.Connection.prototype.createSession = function(eventObj) {
+	RelayConnection.prototype.createSession = function(eventObj) {
 		var sessionId, localUri;
 		
 		do {
@@ -104,7 +104,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {CrocMSRP.FileParams} [params] Optional file parameters that may
 	 * influence the construction of the SDP offer.
 	 */
-	CrocMSRP.Connection.prototype.createFileTransferSession = function(eventObj, file, params) {
+	RelayConnection.prototype.createFileTransferSession = function(eventObj, file, params) {
 		var session = this.createSession(eventObj);
 		session.file = file;
 		session.fileParams = params || {};
@@ -115,7 +115,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * Closes all sessions associated with this connection and  closes the
 	 * websocket connection.
 	 */
-	CrocMSRP.Connection.prototype.disconnect = function() {
+	RelayConnection.prototype.disconnect = function() {
 		var sessionId;
 		for (sessionId in this.localSessionIds) {
 			this.localSessionIds[sessionId].close();
@@ -124,7 +124,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	};
 
 	// Internal Events
-	CrocMSRP.Connection.prototype.onWsConnect = function() {
+	RelayConnection.prototype.onWsConnect = function() {
 		var sessionId;
 		// Notify sessions to kick off authentication process
 		for (sessionId in this.localSessionIds) {
@@ -132,7 +132,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 	};
 
-	CrocMSRP.Connection.prototype.onWsError = function() {
+	RelayConnection.prototype.onWsError = function() {
 		var sessionId;
 		// Ungraceful disconnect
 		console.log('WS Error');
@@ -151,14 +151,14 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 	};
 
-	CrocMSRP.Connection.prototype.onWsDisconnect = function() {
+	RelayConnection.prototype.onWsDisconnect = function() {
 		// Graceful disconnect (on request)
 		console.log('WS Disconnected');
 		this.ws = null;
 		this.outstandingSends = 0;
 	};
 
-	CrocMSRP.Connection.prototype.removeSession = function(sessionId) {
+	RelayConnection.prototype.removeSession = function(sessionId) {
 		delete this.localSessionIds[sessionId];
 		if (CrocMSRP.util.isEmpty(this.localSessionIds)) {
 			// No more sessions; close the connection
@@ -168,7 +168,7 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 	};
 
-	CrocMSRP.Connection.prototype.onMsrpRequest = function(req) {
+	RelayConnection.prototype.onMsrpRequest = function(req) {
 		var toUri, session;
 		
 		// The request's To-Path should have only one URI, and that URI should
@@ -205,12 +205,12 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 	};
 	
-	CrocMSRP.Connection.prototype.addSender = function(sender) {
+	RelayConnection.prototype.addSender = function(sender) {
 		this.activeSenders.push(sender);
 		sendRequests(this);
 	};
 	
-	CrocMSRP.Connection.prototype.onMsrpResponse = function(res) {
+	RelayConnection.prototype.onMsrpResponse = function(res) {
 		if (res.request.method === 'SEND') {
 			this.outstandingSends--;
 		}
@@ -266,7 +266,11 @@ var CrocMSRP = (function(CrocMSRP) {
 			}
 		}
 	}
-	
+
+	// Old name, for backwards compatibility
+	CrocMSRP.Connection = RelayConnection;
+	CrocMSRP.RelayConnection = RelayConnection;
+
 	return CrocMSRP;
 }(CrocMSRP || {}));
 

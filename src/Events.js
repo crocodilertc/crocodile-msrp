@@ -1,11 +1,9 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
-
-/*jshint unused:vars */
 
 var CrocMSRP = (function(CrocMSRP) {
 
@@ -57,7 +55,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * is not recognised/supported by the application. An appropriate error will
 	 * be returned to the relay in this case.
 	 */
-	CrocMSRP.Events.prototype.onMessageReceived = function(id, contentType, body) {
+	CrocMSRP.Events.prototype.onMessageReceived = function() {
 	};
 	
 	/**
@@ -67,7 +65,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {String} id The Message ID of the sent message (as returned
 	 * by the {@link CrocMSRP.Session#send} function).
 	 */
-	CrocMSRP.Events.prototype.onMessageSent = function(id) {
+	CrocMSRP.Events.prototype.onMessageSent = function() {
 	};
 	
 	/**
@@ -77,7 +75,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {String} id The Message ID of the delivered message (as
 	 * returned by the {@link CrocMSRP.Session#send} function).
 	 */
-	CrocMSRP.Events.prototype.onMessageDelivered = function(id) {
+	CrocMSRP.Events.prototype.onMessageDelivered = function() {
 	};
 
 	/**
@@ -93,7 +91,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {String} comment The error comment returned (if present). If we
 	 * timed out locally, this will be set to "Report Timeout".
 	 */
-	CrocMSRP.Events.prototype.onMessageSendFailed = function(id, status, comment) {
+	CrocMSRP.Events.prototype.onMessageSendFailed = function() {
 	};
 	
 	/**
@@ -115,7 +113,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * is not recognised/supported by the application. An appropriate error will
 	 * be returned to the relay in this case.
 	 */
-	CrocMSRP.Events.prototype.onFirstChunkReceived = function(id, contentType, filename, size, description) {
+	CrocMSRP.Events.prototype.onFirstChunkReceived = function() {
 	};
 	
 	/**
@@ -127,7 +125,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * this may become greater than the reported file size if any chunks have
 	 * been resent during the transfer.
 	 */
-	CrocMSRP.Events.prototype.onChunkReceived = function(id, receivedBytes) {
+	CrocMSRP.Events.prototype.onChunkReceived = function() {
 	};
 	
 	/**
@@ -137,7 +135,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {String} id The Message ID of the aborted message.
 	 * @param {Blob} partialBody The partially-received message body.
 	 */
-	CrocMSRP.Events.prototype.onMessageReceiveAborted = function(id, partialBody) {
+	CrocMSRP.Events.prototype.onMessageReceiveAborted = function() {
 	};
 	
 	/**
@@ -146,7 +144,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * @param {String} id The Message ID of the timed-out message.
 	 * @param {Blob} partialBody The partially-received message body.
 	 */
-	CrocMSRP.Events.prototype.onMessageReceiveTimeout = function(id, partialBody) {
+	CrocMSRP.Events.prototype.onMessageReceiveTimeout = function() {
 	};
 	
 	/**
@@ -157,7 +155,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	 * by the {@link CrocMSRP.Session#send} function).
 	 * @param {Number} sentBytes The total bytes sent so far.
 	 */
-	CrocMSRP.Events.prototype.onChunkSent = function(id, sentBytes) {
+	CrocMSRP.Events.prototype.onChunkSent = function() {
 	};
 	
 	CrocMSRP.mandatoryEvents = [

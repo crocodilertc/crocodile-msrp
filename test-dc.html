@@ -1,0 +1,70 @@
+<html>
+	<head>
+		<script src="libs/md5/md5.js"></script>
+		<script src="src/ChunkReceiver.js"></script>
+		<script src="src/ChunkSender.js"></script>
+		<script src="src/ConnectionConfig.js"></script>
+		<script src="src/ContentType.js"></script>
+		<script src="src/DataChannelSession.js"></script>
+		<script src="src/DCWrapper.js"></script>
+		<script src="src/digestAuthentication.js"></script>
+		<script src="src/DirectConnection.js"></script>
+		<script src="src/Events.js"></script>
+		<script src="src/Exceptions.js"></script>
+		<script src="src/FileParams.js"></script>
+		<script src="src/Message.js"></script>
+		<script src="src/parser.js"></script>
+		<script src="src/RelayConnection.js"></script>
+		<script src="src/Sdp.js"></script>
+		<script src="src/Session.js"></script>
+		<script src="src/Status.js"></script>
+		<script src="src/Uri.js"></script>
+		<script src="src/util.js"></script>
+		<script src="src/WSWrapper.js"></script>
+		<script src="test-dc.js"></script>
+		<style>
+.dropbox {
+	width: 425px;
+	height: 300px;
+	border: 2px solid #DDD;
+	-moz-border-radius: 8px;
+	-webkit-border-radius: 8px;
+	background-color: #FEFFEC;
+	text-align: center;
+	color: #BBB;
+	font-size: 2em;
+	font-family: Arial, sans-serif;
+}
+ 
+.droplabel {
+	position: relative;
+	top: 40%;
+}
+		</style>
+	</head>
+	<body onload="onload()">
+		<table>
+			<tr>
+				<td>
+					<div id="alice-dropbox" class="dropbox">
+						<span id="alice-droplabel" class="droplabel">Alice's file drop</span>
+					</div>
+				</td>
+				<td>
+					<div id="bob-dropbox" class="dropbox">
+						<span id="bob-droplabel" class="droplabel">Bob's file drop</span>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td id="alice-details"></td><td id="bob-details"></td>
+			</tr>
+			<tr>
+				<td id="alice-progress"></td><td id="bob-progress"></td>
+			</tr>
+			<tr>
+				<td id="alice-result"></td><td id="bob-result"></td>
+			</tr>
+		</table>
+	</body>
+</html>

@@ -1,7 +1,7 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
 
@@ -323,7 +323,7 @@ var CrocMSRP = (function(CrocMSRP) {
 					// Incoming file transfer: extract provided info so the
 					// application/user can make an informed decision on
 					// whether or not to accept the file.
-					this.fileParams = CrocMSRP.Sdp.parseFileAttributes(media);
+					this.fileParams = CrocMSRP.Sdp.parseFileAttributes(media.attributes);
 					media.replaceAttribute('sendonly', 'recvonly', null);
 				}
 				changeState(this, states.ESTABLISHED);

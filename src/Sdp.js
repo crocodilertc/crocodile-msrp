@@ -1,7 +1,7 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
 
@@ -51,7 +51,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	CrocMSRP.Sdp.Session.prototype.removeAttribute = function(name) {
 		if (this.attributes[name]) {
 			delete this.attributes[name];
-			this.attributeNameOrder.splice(
+			this.attributeNameOrder.slice(
 					this.attributeNameOrder.indexOf(name), 1);
 		}
 	};
@@ -59,8 +59,8 @@ var CrocMSRP = (function(CrocMSRP) {
 		if (this.attributes[oldName]) {
 			delete this.attributes[oldName];
 			this.addAttribute(newName, newValue);
-			this.attributeNameOrder.splice(this.attributeNameOrder.lastIndexOf(newName), 1);
-			this.attributeNameOrder.splice(
+			this.attributeNameOrder.slice(this.attributeNameOrder.lastIndexOf(newName), 1);
+			this.attributeNameOrder.slice(
 					this.attributeNameOrder.indexOf(oldName), 1, newName);
 		}
 	};
@@ -451,7 +451,7 @@ var CrocMSRP = (function(CrocMSRP) {
 	CrocMSRP.Sdp.Media.prototype.removeAttribute = function(name) {
 		if (this.attributes[name]) {
 			delete this.attributes[name];
-			this.attributeNameOrder.splice(
+			this.attributeNameOrder.slice(
 					this.attributeNameOrder.indexOf(name), 1);
 		}
 	};
@@ -463,8 +463,8 @@ var CrocMSRP = (function(CrocMSRP) {
 		if (this.attributes[oldName]) {
 			delete this.attributes[oldName];
 			this.addAttribute(newName, newValue);
-			this.attributeNameOrder.splice(this.attributeNameOrder.lastIndexOf(newName), 1);
-			this.attributeNameOrder.splice(
+			this.attributeNameOrder.slice(this.attributeNameOrder.lastIndexOf(newName), 1);
+			this.attributeNameOrder.slice(
 					this.attributeNameOrder.indexOf(oldName), 1, newName);
 		}
 	};
@@ -560,10 +560,10 @@ var CrocMSRP = (function(CrocMSRP) {
 		return m;
 	};
 
-	CrocMSRP.Sdp.parseFileAttributes = function (media) {
+	CrocMSRP.Sdp.parseFileAttributes = function (attributes) {
 		var fileParams = {}, position = 0, selector = {},
 			colonIndex, name, value, endIndex,
-			fileSelectorString = media.attributes['file-selector'][0];
+			fileSelectorString = attributes['file-selector'][0];
 		
 		// Separate the file-selector components
 		while (position < fileSelectorString.length) {
@@ -637,18 +637,89 @@ var CrocMSRP = (function(CrocMSRP) {
 		}
 		fileParams.selector = selector;
 		
-		fileParams.id = media.attributes['file-transfer-id'][0];
-		fileParams.disposition = media.attributes['file-disposition'][0] || 'render';
-		if (media.title) {
-			fileParams.description = media.title;
-		}
-		if (media.attributes['file-icon']) {
-			fileParams.icon = media.attributes['file-icon'][0];
+		fileParams.id = attributes['file-transfer-id'][0];
+		fileParams.disposition = attributes['file-disposition'][0] || 'render';
+		if (attributes['file-icon']) {
+			fileParams.icon = attributes['file-icon'][0];
 		}
 		
 		return fileParams;
 	};
-	
+
+	CrocMSRP.Sdp.parseDataChannelAttributes = function(attributes) {
+		var res = {};
+		var alines = attributes['webrtc-DataChannel'];
+
+		if (!alines) {
+			return res;
+		}
+
+		for (var index = 0, len = alines.length; index < len; index++) {
+			var alineSplit = alines[index].split(' ');
+			var sctpPort = alineSplit[0];
+			var pvPairs = alineSplit[1].split(';');
+			var params = {};
+			for (var index2 = 0, len2 = pvPairs.length; index2 < len2; index2++) {
+				var pv = pvPairs[index2].split('=');
+				var param = pv[0];
+				var value = pv[1];
+				params[param] = value.replace(/^"/, '').replace(/"$/, '');
+			}
+
+			if (!res[sctpPort]) {
+				res[sctpPort] = {};
+			}
+			res[sctpPort][params.stream] = params;
+		}
+
+		return res;
+	};
+
+	CrocMSRP.Sdp.parseDataChannelSubProtocolAttributes = function(attributes) {
+		var res = {};
+		var alines = attributes['wdcsa'];
+
+		if (!alines) {
+			return res;
+		}
+
+		for (var index = 0, len = alines.length; index < len; index++) {
+			var aline = alines[index];
+			var spaceIndex = aline.indexOf(' ');
+			var streamRef = aline.slice(0, spaceIndex).split(':');
+			var spAttribute = aline.slice(spaceIndex + 1);
+			var sctpPort = streamRef[0];
+			var stream = streamRef[1];
+			var colonIndex = spAttribute.indexOf(':');
+			var spAttribName, spAttribValue = null;
+			if (colonIndex > 0) {
+				spAttribName = spAttribute.slice(0, colonIndex);
+				spAttribValue = spAttribute.slice(colonIndex + 1);
+			} else {
+				spAttribName = spAttribute;
+			}
+
+			var dcStreams = res[sctpPort];
+			if (!dcStreams) {
+				dcStreams = res[sctpPort] = {};
+			}
+
+			var streamAttribs = dcStreams[stream];
+			if (!streamAttribs) {
+				streamAttribs = dcStreams[stream] = {};
+			}
+
+			var attribValues = streamAttribs[spAttribName];
+			if (!attribValues) {
+				attribValues = streamAttribs[spAttribName] = [];
+			}
+
+			attribValues.push(spAttribValue);
+		}
+
+		return res;
+	};
+
 	return CrocMSRP;
 }(CrocMSRP || {}));
 

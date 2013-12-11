@@ -1,11 +1,9 @@
 /*
- * Crocodile MSRP - http://code.google.com/p/crocodile-msrp/
- * Copyright (c) 2012 Crocodile RCS Ltd
- * http://www.crocodile-rcs.com
+ * Crocodile MSRP - https://github.com/crocodilertc/crocodile-msrp
+ * Copyright (c) 2012-2013 Crocodile RCS Ltd
+ * http://www.crocodilertc.net
  * Released under the MIT license - see LICENSE.TXT
  */
-
-/* jshint unused:vars */
 
 var CrocMSRP = (function(CrocMSRP) {
 	var states;
@@ -93,12 +91,12 @@ var CrocMSRP = (function(CrocMSRP) {
 		return true;
 	};
 
-	CrocMSRP.WSWrapper.prototype.onOpen = function(event) {
+	CrocMSRP.WSWrapper.prototype.onOpen = function() {
 		this.state = states.CONNECTED;
 		this.con.onWsConnect();
 	};
 
-	CrocMSRP.WSWrapper.prototype.onError = function(event) {
+	CrocMSRP.WSWrapper.prototype.onError = function() {
 		// This should be followed by onClose, so don't need to do much here
 		this.state = states.ERROR;
 		console.log('WebSocket error');
